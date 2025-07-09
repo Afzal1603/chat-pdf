@@ -9,6 +9,8 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@ai-sdk/groq": "^1.2.9",
+    "@ai-sdk/react": "^1.2.12",
     "@aws-sdk/client-s3": "^3.839.0",
     "@clerk/nextjs": "^6.23.0",
     "@electric-sql/pglite": "^0.3.4",
@@ -21,7 +23,7 @@
     "@tanstack/react-query": "^5.81.4",
     "@types/md5": "^2.3.5",
     "@xenova/transformers": "^2.17.2",
-    "ai": "^4.3.16",
+    "ai": "^4.3.17",
     "aws-sdk": "^2.1692.0",
     "axios": "^1.10.0",
     "class-variance-authority": "^0.7.1",
