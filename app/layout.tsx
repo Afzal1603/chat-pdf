@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-
+import { AIProvider } from "@/components/element/AIProvider";
 import "./globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
 import Providers from "@/components/element/Providers";

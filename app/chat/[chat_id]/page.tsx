@@ -1,3 +1,4 @@
+import ChatArea from "@/components/element/ChatArea";
 import ChatSideBar from "@/components/element/ChatSideBar";
 import PDFViewer from "@/components/element/PDFViewer";
 import { db } from "@/lib/db";
@@ -32,7 +33,9 @@ const ChatPage = async (props: Props) => {
         <PDFViewer pdf_url={`${currentChat?.pdfUrl}` || ""} />
       </div>
 
-      <div className="col-span-1 row-span-1 sm:col-span-2 sm:row-span-1 md:flex-[2] max-h-screen overflow-scroll border-t-4 md:border-t-0 md:border-l-4 border-amber-200"></div>
+      <div className="col-span-1 row-span-1 sm:col-span-2 sm:row-span-1 md:flex-[2] max-h-screen overflow-scroll border-t-4 md:border-t-0 md:border-l-4 border-amber-200">
+        <ChatArea />
+      </div>
     </div>
   );
 };
