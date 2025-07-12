@@ -31,6 +31,7 @@ export async function loadS3ToPinecone(fileKey: string) {
   console.log("📥 Downloading file from S3...");
   const file_name = await downloadFromS3(fileKey);
 
+  // Validation
   if (
     !file_name ||
     !fs.existsSync(file_name) ||
@@ -42,81 +43,111 @@ export async function loadS3ToPinecone(fileKey: string) {
     throw new Error("File is not a valid PDF.");
   }
 
+  // Load PDF
   let docs: PDFPage[];
   try {
     const loader = new PDFLoader(file_name);
     docs = (await loader.load()) as PDFPage[];
   } catch (err: any) {
-    console.error("PDF loading failed:", err.message || err);
+    console.error("❌ PDF loading failed:", err.message || err);
     throw new Error("Invalid PDF structure or failed to parse.");
   }
 
-  console.log("Splitting PDF content...");
+  // Process documents
+  console.log("✂️ Splitting PDF content...");
   const documents = await Promise.all(docs.map(prepareDocument));
   const flattenedDocs = documents.flat();
-
-  console.log("🧠 Generating embeddings...");
-  const vectorsRaw = await Promise.all(flattenedDocs.map(embededDocument));
-  const vectors = vectorsRaw.filter(
-    (v): v is Vector =>
-      v !== null &&
-      typeof v.id === "string" &&
-      Array.isArray(v.values) &&
-      typeof v.metadata?.text === "string"
+  console.log(`📄 Total chunks to embed: ${flattenedDocs.length}`);
+  flattenedDocs.forEach((doc, i) =>
+    console.log(`Chunk ${i + 1}: ${doc.pageContent.slice(0, 100)}...`)
   );
+
+  // Generate embeddings
+  console.log("🧠 Generating embeddings...");
+  const vectors = (await Promise.all(flattenedDocs.map(embededDocument)))
+    .filter((v): v is Vector => v !== null)
+    .map((v) => ({
+      ...v,
+      metadata: {
+        ...v.metadata,
+        source: fileKey, // Add source to metadata for filtering
+      },
+    }));
 
   if (!vectors.length) {
     throw new Error("No valid vectors to upload to Pinecone.");
   }
 
+  // Upload to Pinecone
   const client = await initPinecone();
-  const index = client.Index("chatpdf");
+  const index = client.index("chatpdf");
   const namespace = convertToAscii(fileKey);
 
-  console.log("Uploading to Pinecone...");
-  console.log(`Uploading ${vectors.length} vectors to namespace ${namespace}`);
+  console.log(
+    `🚀 Uploading ${vectors.length} vectors to namespace: ${namespace}`
+  );
 
-  try {
-    // Corrected upsert call - pass vectors array directly
-    await index.upsert(vectors, { namespace });
-    console.log("✅ PDF embedded and uploaded to Pinecone successfully.");
-  } catch (error) {
-    console.error("Pinecone upload failed:", error);
-    throw new Error("Failed to upload vectors to Pinecone");
+  const batchSize = 100;
+  for (let i = 0; i < vectors.length; i += batchSize) {
+    const batch = vectors.slice(i, i + batchSize);
+    try {
+      await index.upsert(batch, { namespace });
+      console.log(
+        `✅ Uploaded batch ${i / batchSize + 1}/${Math.ceil(
+          vectors.length / batchSize
+        )}`
+      );
+    } catch (error) {
+      console.error(`❌ Failed to upload batch ${i / batchSize + 1}:`, error);
+      throw new Error("Failed to upload vectors to Pinecone");
+    }
   }
+
+  console.log("✅ PDF embedded and uploaded to Pinecone successfully.");
+  return vectors.length;
 }
 
 export async function embededDocument(doc: Document): Promise<Vector | null> {
+  const text = doc.pageContent?.trim();
+
+  if (!text || text.length < 10) {
+    console.warn("⚠️ Skipping empty or too short chunk");
+    return null;
+  }
+
   try {
-    const embeddings = await getEmbedding(doc.pageContent);
-    const hash = md5(doc.pageContent);
+    const embeddings = await getEmbedding(text);
+    const hash = md5(text);
+
     return {
       id: hash,
       values: embeddings,
       metadata: {
-        text: doc.metadata.text,
-        pageNumber: doc.metadata.pageNumber,
+        text: doc.metadata.text || "",
+        pageNumber: doc.metadata.pageNumber || 0,
+        chunkHash: hash,
       },
     };
   } catch (error) {
-    console.error("Embedding failed for a document:", error);
+    console.error("❌ Embedding failed for a chunk:", error);
     return null;
   }
 }
 
-export async function truncateStringByBytes(str: string, bytes: number) {
-  const encoder = new TextEncoder();
-  return new TextDecoder("utf-8").decode(encoder.encode(str).slice(0, bytes));
-}
-
-async function prepareDocument(page: PDFPage) {
+async function prepareDocument(page: PDFPage): Promise<Document[]> {
   let { pageContent } = page;
   const { metadata } = page;
-  pageContent = pageContent.replace(/\n/g, " ");
+
+  pageContent = pageContent.replace(/\n/g, " ").replace(/\s+/g, " ").trim();
+
+  if (!pageContent || pageContent.length < 10) {
+    console.warn("⚠️ Skipping empty page content");
+    return [];
+  }
 
   const splitter = new RecursiveCharacterTextSplitter({
-    chunkSize: 400,
-    chunkOverlap: 50,
+    chunkSize: 1000,
+    chunkOverlap: 200,
   });
 
   const docs = await splitter.splitDocuments([
@@ -124,10 +155,19 @@ async function prepareDocument(page: PDFPage) {
       pageContent,
       metadata: {
         pageNumber: metadata.loc.pageNumber,
-        text: await truncateStringByBytes(pageContent, 360000),
+        text: await truncateStringByBytes(pageContent, 36000),
+        originalLength: pageContent.length,
       },
     }),
   ]);
 
   return docs;
+}
+
+export async function truncateStringByBytes(
+  str: string,
+  bytes: number
+): Promise<string> {
+  const encoder = new TextEncoder();
+  return new TextDecoder("utf-8").decode(encoder.encode(str).slice(0, bytes));
 }

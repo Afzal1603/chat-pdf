@@ -34,7 +34,7 @@ const ChatPage = async (props: Props) => {
       </div>
 
       <div className="bg-gradient-to-br from-purple-200 to-indigo-300 col-span-1 row-span-1 sm:col-span-2 sm:row-span-1 md:flex-[2] max-h-screen overflow-y-auto scrollbar-custom border-t-4 md:border-t-0 md:border-l-4 border-zinc-900">
-        <ChatArea />
+        <ChatArea chatId={parseInt(chat_id)} />
       </div>
     </div>
   );

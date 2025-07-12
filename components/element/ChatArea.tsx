@@ -2,9 +2,16 @@
 
 import { useChat } from "@ai-sdk/react";
 import { useEffect, useRef } from "react";
-
-export default function ChatArea() {
-  const { messages, input, handleInputChange, handleSubmit } = useChat();
+type Props = {
+  chatId: number;
+};
+export default function ChatArea({ chatId }: Props) {
+  const { messages, input, handleInputChange, handleSubmit } = useChat({
+    api: "/api/chat",
+    body: {
+      chatId,
+    },
+  });
   const bottomRef = useRef(null);
 
   useEffect(() => {
