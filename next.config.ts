@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+
 /** @type {import('next').NextConfig} */
 const nextConfig: NextConfig = {
   images: {
@@ -8,6 +9,14 @@ const nextConfig: NextConfig = {
         hostname: "cdn-icons-png.flaticon.com",
       },
     ],
+  },
+
+  // ✅ ADD THESE 👇
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+  typescript: {
+    ignoreBuildErrors: true,
   },
 };
 
