@@ -7,9 +7,11 @@ import { useDropzone } from "react-dropzone";
 import axios from "axios";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
+
 const Dropbox = () => {
   const router = useRouter();
   const [uploading, setUploading] = React.useState(false);
+
   const { mutate, isLoading } = useMutation({
     mutationFn: async ({
       file_name,
@@ -25,33 +27,34 @@ const Dropbox = () => {
       return response.data;
     },
   });
+
   const onDrop = async (acceptedFiles: File[]) => {
     const file = acceptedFiles[0];
     if (file.size > 10 * 1024 * 1024) {
       toast.error("File size should be less than 10MB");
       return;
     }
+
     try {
       setUploading(true);
       const data = await uploadToS3(file);
+
       if (!data?.file_key || !data?.file_name) {
         toast.error("Error uploading file");
         return;
       }
+
       mutate(data, {
         onSuccess: ({ chat_id }) => {
           toast.success("Chat created successfully");
           router.push(`/chat/${chat_id}`);
-          console.log(data);
         },
-        onError: (error) => {
+        onError: () => {
           toast.error("Error uploading file");
-          console.log(error);
         },
       });
-      console.log(data);
     } catch (error) {
-      console.log(error);
+      console.error(error);
     } finally {
       setUploading(false);
     }
@@ -68,18 +71,41 @@ const Dropbox = () => {
   return (
     <div
       {...getRootProps()}
-      className="border-3 border-indigo-500 p-2 rounded-xl w-98 h-36 flex justify-center items-center transition-all duration-300 shadow-md hover:shadow-lg hover:border-purple-500 bg-white/70 backdrop-blur-md hover:cursor-pointer"
+      className="
+        w-[420px] h-[160px]
+        rounded-2xl p-2
+        cursor-pointer
+        transition-all duration-300
+        bg-white/5 backdrop-blur-lg
+        border border-white/15
+        hover:border-indigo-400/60
+        hover:bg-white/10
+        shadow-sm hover:shadow-md
+      "
     >
       <input {...getInputProps()} />
-      <div className="flex flex-col justify-center items-center border-2 border-dashed border-purple-400 w-full h-full rounded-lg">
+
+      <div
+        className="
+          w-full h-full rounded-xl
+          flex flex-col items-center justify-center
+          border-2 border-dashed border-white/25
+        "
+      >
         {uploading || isLoading ? (
-          <Loader2 size={48} className="animate-spin text-indigo-600"></Loader2>
+          <Loader2 size={46} className="animate-spin text-indigo-300" />
         ) : (
           <>
-            <Inbox className="text-indigo-600 " size={48} />
-            <p className="font-medium text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-700 mt-2">
+            <Inbox size={46} className="text-indigo-300" />
+            <p
+              className="
+                mt-2 text-sm font-medium text-center
+                text-white/80
+              "
+            >
               Drop your PDF here or click to upload
             </p>
+            <p className="text-xs mt-1 text-white/50">PDF only · Max 10MB</p>
           </>
         )}
       </div>

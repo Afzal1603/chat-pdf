@@ -1,7 +1,7 @@
 import { Pinecone } from "@pinecone-database/pinecone";
 import { getEmbedding } from "./embedding/embedding";
 
-const MIN_SCORE = 0.5;
+const MIN_SCORE = 0.8;
 const TOP_K = 5;
 
 export async function getMatchesFromEmbeddings(
@@ -12,7 +12,7 @@ export async function getMatchesFromEmbeddings(
   if (!apiKey) throw new Error("PINECONE_API_KEY is not set");
 
   const pinecone = new Pinecone({ apiKey });
-  const index = pinecone.index("chatpdf");
+  const index = pinecone.index("chatpdf002");
 
   try {
     const queryResult = await index.query({
@@ -38,10 +38,8 @@ type Metadata = {
 export async function getContext(query: string, fileKey: string) {
   const queryEmbeddings = await getEmbedding(query);
 
-  // 1. First try with filter
   let matches = await getMatchesFromEmbeddings(queryEmbeddings, fileKey);
 
-  // 2. If no results, try without filter (for debugging)
   if (matches.length === 0) {
     console.warn("No filtered matches found - trying unfiltered search");
     const index = new Pinecone({ apiKey: process.env.PINECONE_API_KEY! }).index(

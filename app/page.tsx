@@ -5,69 +5,97 @@ import Link from "next/link";
 import { LogIn } from "lucide-react";
 import Dropbox from "@/components/element/Dropbox";
 
-const page = async () => {
+const Page = async () => {
   const { userId } = await auth();
   const isAuth = !!userId;
 
   return (
-    <div className="w-full h-screen bg-gradient-to-br from-purple-200 via-white to-indigo-200  flex flex-col justify-center items-center px-4">
-      {/* Hero Title */}
-      <h1 className="hover:cursor-pointer hover:bg-gradient-to-r hover:from-pink-500 hover:via-purple-500 hover:to-indigo-500  absolute top-1 left-1 text-2xl font-extrabold font-['Inter'] bg-gradient-to-r from-indigo-600 via-purple-500 to-pink-500 text-transparent bg-clip-text tracking-tight drop-shadow-sm mt-2 ml-2">
+    <div
+      className="w-full h-screen flex flex-col items-center justify-center px-6 overflow-hidden
+      bg-gradient-to-br from-[#1b1f2a] via-[#1f2333] to-[#262b40]"
+    >
+      {/* ================= Brand (Top Left) ================= */}
+      <h1
+        className="absolute top-5 left-6 text-xl font-extrabold tracking-tight
+        bg-gradient-to-r from-indigo-300 via-violet-300 to-fuchsia-300
+        text-transparent bg-clip-text"
+      >
         Intelidocs
       </h1>
 
-      {isAuth ? (
-        <UserButton
-          appearance={{
-            elements: {
-              userButtonAvatarBox: {
-                width: "80px",
-                height: "80px",
+      {/* ================= User Button ================= */}
+      {isAuth && (
+        <div className="absolute top-5 right-6">
+          <UserButton
+            appearance={{
+              elements: {
+                userButtonAvatarBox: {
+                  width: "44px",
+                  height: "44px",
+                },
               },
-            },
-          }}
-          afterSignOutUrl="/"
-        />
-      ) : (
-        <h1 className=" absolute top-50 text-6xl font-extrabold font-['Inter'] bg-gradient-to-r from-indigo-600 via-purple-500 to-pink-500 text-transparent bg-clip-text tracking-tight drop-shadow-sm">
+            }}
+            afterSignOutUrl="/"
+          />
+        </div>
+      )}
+
+      {/* ================= Hero ================= */}
+      {!isAuth && (
+        <h1
+          className="text-6xl md:text-7xl font-extrabold tracking-tight mb-6
+          bg-gradient-to-r from-indigo-300 via-purple-300 to-pink-300
+          text-transparent bg-clip-text text-center"
+        >
           Intelidocs
         </h1>
       )}
-      {/* User Button */}
 
-      {/* Heading and CTA */}
-      <div className="flex items-center gap-1.5 justify-center mt-4">
-        <div className="flex flex-col items-center">
-          <h2 className=" text-3xl sm:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-700 to-indigo-900 text-center">
-            {isAuth
-              ? "Welcome back! Ready to unlock insights from your PDFs?"
-              : "Turn any PDF into a powerful conversation"}
-          </h2>
+      {/* ================= Headline ================= */}
+      <h2
+        className="text-3xl sm:text-4xl font-bold text-center max-w-3xl
+        text-white/90"
+      >
+        {isAuth
+          ? "Welcome back. Ready to unlock insights from your PDFs?"
+          : "Turn any PDF into a powerful conversation"}
+      </h2>
 
-          {isAuth && (
-            <Button className="text-white hover:cursor-pointer mt-4 bg-gradient-to-r from-indigo-600 to-purple-700 hover:from-purple-700 hover:to-indigo-600 transition-all duration-300">
-              Go to Chats
-            </Button>
-          )}
-        </div>
-      </div>
+      {/* ================= Subheading ================= */}
+      <p
+        className="mt-5 max-w-2xl text-center text-base sm:text-lg
+        text-white/60"
+      >
+        Transform static documents into dynamic conversations — perfect for
+        research, learning, and understanding complex content effortlessly.
+      </p>
 
-      {/* Subheading */}
-      <div className="text-center px-4 mt-6">
-        <p className="text-md sm:text-lg max-w-2xl font-medium text-gray-700">
-          Join now to transform static documents into dynamic conversations —
-          ideal for research, learning, and understanding complex content.
-        </p>
-      </div>
-
-      {/* Action Area */}
-      <div className="mt-6">
+      {/* ================= CTA ================= */}
+      <div className="mt-10">
         {isAuth ? (
-          <Dropbox />
+          <div className="flex flex-col items-center gap-6">
+            <Link href="/chat">
+              <Button
+                className="px-6 py-4 text-lg font-semibold rounded-xl
+                bg-gradient-to-r from-indigo-500 to-violet-600
+                hover:from-violet-600 hover:to-indigo-600
+                text-white shadow-lg hover:shadow-xl transition-all"
+              >
+                Go to Chats
+              </Button>
+            </Link>
+
+            <Dropbox />
+          </div>
         ) : (
           <Link href="/sign-in">
-            <Button className="animate-pulse hover:animate-none text-white mt-2 hover:cursor-pointer bg-gradient-to-r from-indigo-600 to-purple-700 hover:from-purple-800 hover:to-indigo-700 transition-all duration-300">
-              Login to get started!
+            <Button
+              className="px-6 py-4 text-lg font-semibold rounded-xl
+              bg-gradient-to-r from-indigo-500 to-violet-600
+              hover:from-violet-600 hover:to-indigo-600
+              text-white shadow-lg hover:shadow-xl transition-all"
+            >
+              Login to get started
               <LogIn className="ml-2" />
             </Button>
           </Link>
@@ -77,4 +105,4 @@ const page = async () => {
   );
 };
 
-export default page;
+export default Page;
