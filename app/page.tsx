@@ -96,7 +96,7 @@ const Page = async () => {
               text-white shadow-lg hover:shadow-xl transition-all"
             >
               Login to get started
-              <LogIn className="ml-2" />
+              <LogIn className="ml-2 p-4" />
             </Button>
           </Link>
         )}
