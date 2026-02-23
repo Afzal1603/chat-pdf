@@ -3,31 +3,15 @@ import { Button } from "@/components/ui/button";
 import { FileText, Plus } from "lucide-react";
 import { UserButton } from "@clerk/nextjs";
 import { auth } from "@clerk/nextjs/server";
-
-const dummyChats = [
-  {
-    id: "26",
-    title: "Operating Systems Notes",
-    lastMessage: "Explain deadlock with example",
-    updatedAt: "2 hours ago",
-  },
-  {
-    id: "2",
-    title: "DBMS Important Questions",
-    lastMessage: "Difference between SQL and NoSQL",
-    updatedAt: "Yesterday",
-  },
-  {
-    id: "3",
-    title: "Blockchain Research Paper",
-    lastMessage: "Summarize the consensus mechanism",
-    updatedAt: "3 days ago",
-  },
-];
+import { chats as chatsTable } from "@/lib/db/schema";
+import { db } from "@/lib/db";
+import { eq, desc } from "drizzle-orm";
+import { redirect } from "next/navigation";
 
 const ChatsPage = async () => {
   const { userId } = await auth();
 
+  // ✅ Auth check FIRST
   if (!userId) {
     return (
       <div className="h-screen flex items-center justify-center bg-[#1f2333]">
@@ -37,6 +21,13 @@ const ChatsPage = async () => {
       </div>
     );
   }
+
+  // ✅ Correct DB query
+  const userChats = await db
+    .select()
+    .from(chatsTable)
+    .where(eq(chatsTable.userId, userId))
+    .orderBy(desc(chatsTable.createdAt)); // ✅ FIX
 
   return (
     <div
@@ -68,20 +59,28 @@ const ChatsPage = async () => {
 
       {/* ================= New Chat CTA ================= */}
       <div className="mb-8">
-        <Button
-          className="flex items-center gap-2 px-5 py-3 rounded-xl
-          bg-gradient-to-r from-indigo-500 to-violet-600
-          hover:from-violet-600 hover:to-indigo-600
-          text-white font-semibold shadow-md hover:shadow-lg transition-all"
-        >
-          <Plus className="h-4 w-4" />
-          Start New Chat
-        </Button>
+        <Link href="/">
+          <Button
+            className="flex items-center gap-2 px-5 py-3 rounded-xl
+            bg-gradient-to-r from-indigo-500 to-violet-600
+            hover:from-violet-600 hover:to-indigo-600
+            text-white font-semibold shadow-md hover:shadow-lg transition-all"
+          >
+            <Plus className="h-4 w-4" />
+            Start New Chat
+          </Button>
+        </Link>
       </div>
 
       {/* ================= Chats List ================= */}
       <div className="grid gap-5 max-w-4xl">
-        {dummyChats.map((chat) => (
+        {userChats.length === 0 && (
+          <p className="text-white/60">
+            No chats yet. Start your first chat 🚀
+          </p>
+        )}
+
+        {userChats.map((chat) => (
           <Link key={chat.id} href={`/chat/${chat.id}`}>
             <div
               className="group cursor-pointer rounded-2xl p-5
@@ -102,19 +101,21 @@ const ChatsPage = async () => {
                   </div>
 
                   <div>
-                    <h3
-                      className="font-semibold text-lg text-white/90
-                      group-hover:text-white transition"
-                    >
-                      {chat.title}
+                    <h3 className="font-semibold text-lg text-white/90">
+                      {chat.pdfName}
                     </h3>
+
                     <p className="text-sm text-white/60 mt-1 line-clamp-1">
-                      {chat.lastMessage}
+                      {chat.lastMessage ?? "No messages yet"}
                     </p>
                   </div>
                 </div>
 
-                <span className="text-xs text-white/40">{chat.updatedAt}</span>
+                <span className="text-xs text-white/40">
+                  {chat.updatedAt
+                    ? new Date(chat.updatedAt).toLocaleDateString()
+                    : ""}
+                </span>
               </div>
             </div>
           </Link>

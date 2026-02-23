@@ -1,3 +1,7 @@
+if (typeof globalThis !== "undefined") {
+  (globalThis as any).AI_SDK_LOG_WARNINGS = false;
+}
+
 import { loadS3ToPinecone } from "@/lib/pinecone/pinecone";
 import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
