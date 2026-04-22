@@ -2,8 +2,9 @@ import { Button } from "@/components/ui/button";
 import { auth } from "@clerk/nextjs/server";
 import { UserButton } from "@clerk/nextjs";
 import Link from "next/link";
-import { LogIn } from "lucide-react";
+import { LogIn, FlaskConical } from "lucide-react";
 import Dropbox from "@/components/element/Dropbox";
+
 
 const Page = async () => {
   const { userId } = await auth();
@@ -86,6 +87,24 @@ const Page = async () => {
             </Link>
 
             <Dropbox />
+
+            {/* Research Mode Entry */}
+            <div className="w-[420px] rounded-2xl p-5 bg-white/5 backdrop-blur-lg border border-emerald-500/20 hover:border-emerald-400/40 hover:bg-white/10 transition-all shadow-sm">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="p-2 rounded-xl bg-emerald-500/15 text-emerald-400">
+                  <FlaskConical size={22} />
+                </div>
+                <div>
+                  <h3 className="text-white/90 font-semibold text-sm">Research Mode</h3>
+                  <p className="text-white/50 text-xs">Compare up to 5 PDFs side-by-side</p>
+                </div>
+              </div>
+              <Link href="/research">
+                <Button className="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-teal-600 hover:to-emerald-600 text-white text-sm font-semibold transition-all">
+                  Open Research Mode
+                </Button>
+              </Link>
+            </div>
           </div>
         ) : (
           <Link href="/sign-in">

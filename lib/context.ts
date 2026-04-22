@@ -131,3 +131,52 @@ export async function getContext(query: string, fileKey: string) {
     throw new Error(`Failed to get context: ${error.message || error}`);
   }
 }
+
+/**
+ * Research Mode: query multiple Pinecone namespaces (one per PDF) in parallel.
+ * Returns an array of { fileKey, pdfName, context } for each PDF.
+ */
+export async function getResearchContext(
+  query: string,
+  pdfs: { fileKey: string; pdfName: string }[],
+): Promise<{ fileKey: string; pdfName: string; context: string }[]> {
+  if (!query || query.trim().length === 0) {
+    throw new Error("Query cannot be empty");
+  }
+  if (!pdfs || pdfs.length === 0) {
+    throw new Error("At least one PDF is required");
+  }
+
+  const queryEmbeddings = await getEmbedding(query);
+
+  const results = await Promise.all(
+    pdfs.map(async ({ fileKey, pdfName }) => {
+      try {
+        const matches = await getMatchesFromEmbeddings(queryEmbeddings, fileKey);
+
+        const qualifiedMatches = matches.filter(
+          (match) => match.score && match.score > MIN_SCORE,
+        );
+
+        const source = qualifiedMatches.length > 0 ? qualifiedMatches : matches.slice(0, 2);
+
+        const context = source
+          .map((match) => {
+            const metadata = match.metadata as Metadata;
+            const text = metadata?.text || "";
+            const pageNum = metadata?.pageNumber || "unknown";
+            return `[Page ${pageNum}] ${text}`;
+          })
+          .join("\n\n")
+          .substring(0, 3000);
+
+        return { fileKey, pdfName, context };
+      } catch (err: any) {
+        console.error(`Error getting context for ${fileKey}:`, err);
+        return { fileKey, pdfName, context: "" };
+      }
+    }),
+  );
+
+  return results;
+}

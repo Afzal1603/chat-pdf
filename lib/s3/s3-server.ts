@@ -40,13 +40,17 @@ export async function downloadFromS3(fileKey: string): Promise<string> {
     console.log(`Downloaded ${buffer.length} bytes from S3`);
 
     // Define a safe temporary directory (cross-platform)
-    // const tmpDir = path.join(process.cwd(), "tmp");
-    const tmpDir = "/tmp";
+    // Use project-local tmp dir on Windows dev, os tmpdir elsewhere
+    const isWindows = process.platform === "win32";
+    const tmpDir = isWindows
+      ? path.join(process.cwd(), "tmp")
+      : (process.env.TMP_DIR || path.join(process.cwd(), "tmp"));
 
     // Ensure the directory exists
     if (!fs.existsSync(tmpDir)) {
       fs.mkdirSync(tmpDir, { recursive: true });
     }
+
 
     const filePath = path.join(tmpDir, `pdf-${Date.now()}.pdf`);
 
