@@ -1,6 +1,7 @@
 if (typeof globalThis !== "undefined") {
   (globalThis as any).AI_SDK_LOG_WARNINGS = false;
 }
+export const maxDuration = 60;
 
 import { loadS3ToPinecone } from "@/lib/pinecone/pinecone";
 import { NextResponse } from "next/server";
